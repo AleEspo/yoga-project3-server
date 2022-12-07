@@ -59,11 +59,11 @@ userRouter.post("/login", async (req, res) => {
 
     // procur o email do usuario, se não esistir do uma msg equivoca para segurança
     if (!user) {
-      return res.status(404).json({ msg: "Invalid email." });
+      return res.status(404).json({ msg: "Invalid email or password." });
     }
     // metodo bcrypt pra comparar booleano da senha inserita com senha do usuario
     if (!(await bcrypt.compare(password, user.passwordHash))) {
-      return res.status(404).json({ msg: "Invalid password." });
+      return res.status(404).json({ msg: "Invalid password or email." });
     }
 
     // se não cair no if, geramos TOKEN -> func x gerar o TOKE definnida no config

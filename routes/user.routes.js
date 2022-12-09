@@ -6,6 +6,7 @@ import { generateToken } from "../config/jwt.config.js";
 import isAuth from "../middlewares/isAuth.js";
 import attachCurrentUser  from "../middlewares/attachCurrentUser.js";
 import isAdmin from "../middlewares/isAdmin.js"
+import isTeacher from "../middlewares/isTeacher.js";
 
 dotenv.config();
 
@@ -22,7 +23,7 @@ userRouter.post("/signup", async (req, res) => {
       )
     ) {
       return res.status(400).json({
-        msg: "Your password must include minimum eight characters, at least one uppercase letter, one lowercase letter, one number and one special character:",
+        msg: "Your password must include minimum eight characters, at least one uppercase letter, one lowercase letter, one number and one special character.",
       });
     }
     // CRYPTO PASSWORD E GUARDO NO DB UMA HASHEDPASSWORD
@@ -85,7 +86,7 @@ userRouter.post("/login", async (req, res) => {
   }
 });
 
-userRouter.get("/profile", isAuth, isAdmin, attachCurrentUser, async (req, res) => {
+userRouter.get("/profile", isAuth, attachCurrentUser, async (req, res) => {
   const loggedInUser = req.currentUser;
   return res.status(200).json(loggedInUser);
 });

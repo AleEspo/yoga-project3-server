@@ -2,10 +2,10 @@ import { UserModel } from "../model/user.model.js";
 // segunda 2.50
 export default async function attachCurrentUser(req, res, next) {
   try {
-    const userDate = req.auth;
+    const userData = req.auth;
 
     const user = await UserModel.findOne(
-      { _id: userDate._id },
+      { _id: userData._id },
       { passwordHash: 0 }
     );
 

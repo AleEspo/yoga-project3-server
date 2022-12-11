@@ -8,7 +8,7 @@ import { UserModel } from "../model/user.model.js";
 
 const orderRouter = express.Router();
 
-orderRouter.post("/", isAuth, attachCurrentUser, async (res, req) => {
+orderRouter.post("/", isAuth, attachCurrentUser, async (req, res) => {
   try {
 
     // ERRO AQUI 
@@ -57,12 +57,11 @@ orderRouter.patch(
       );
 
       const practice = await PracticeModel.findOne({
-        _id: updateOrder.product,
+        _id: updateOrder.practice,
       });
 
-      await PracticeModel.findOne({ _id: updateOrder.practice });
       await PracticeModel.findOneAndUpdate(
-        { _id: updateOrder.practice },
+        { _id: practice._id },
         { placesLeft: practice.placesLeft - 1 }
       );
       return res.status(200).json(updateOrder);
@@ -79,7 +78,7 @@ orderRouter.patch(
   isAuth,
   attachCurrentUser,
   isAdmin,
-  async (res, req) => {
+  async (req, res) => {
     try {
       const { placesLeft } = req.body;
       // boolean
@@ -99,9 +98,6 @@ orderRouter.patch(
         );
       }
 
-      const practice = await PracticeModel.findOne({
-        _id: updateOrder.practice,
-      });
       return res.status(200).json(updateOrder);
     } catch (err) {
       console.log(err);
@@ -112,7 +108,7 @@ orderRouter.patch(
 
 
 // ALL ORDERS PRA ADMIN
-orderRouter.get("/", isAuth, attachCurrentUser, isAdmin, async (res, req) => {
+orderRouter.get("/", isAuth, attachCurrentUser, isAdmin, async (req, res) => {
     try {
       const orders = await OrderModel.findOne({});
   
@@ -123,8 +119,8 @@ orderRouter.get("/", isAuth, attachCurrentUser, isAdmin, async (res, req) => {
     }
   });
 
-// DETAILS PRA ADMIN
-orderRouter.get(":orderId", isAuth, attachCurrentUser, isAdmin, async (res, req) => {
+// SINGLE ORDER DETAILS PRA ADMIN
+orderRouter.get(":orderId", isAuth, attachCurrentUser, isAdmin, async (req, res) => {
   try {
     const order = await OrderModel.findOne({ _id: req.params.orderId });
 
@@ -137,9 +133,10 @@ orderRouter.get(":orderId", isAuth, attachCurrentUser, isAdmin, async (res, req)
 
 
 //TODAS AS ORDENS DO USUARIO
-orderRouter.get("/myOrders", isAuth, attachCurrentUser, async (res, req) => {
+orderRouter.get("/my-orders", isAuth, attachCurrentUser, async (req, res) => {
   try {
     const loggedInUser = req.currentUser;
+
     const orders = await OrderModel.find({ customer: loggedInUser._id });
 
     return res.status(200).json(orders);
@@ -152,14 +149,14 @@ orderRouter.get("/myOrders", isAuth, attachCurrentUser, async (res, req) => {
 
 // DETALHES DUMA ORDEM DO USUARIO LOGADO
 orderRouter.get(
-  "/myOrders/:orderId",
+  "/my-orders/:orderId",
   isAuth,
   attachCurrentUser,
-  async (res, req) => {
+  async (req, res) => {
     try {
       const loggedInUser = req.currentUser;
 
-      const order = await OrderModel.findOne({ _id: req.paramsorderId });
+      const order = await OrderModel.findOne({ _id: req.params.orderId });
 
       if (loggedInUser._id !== order.consumer) {
         return res

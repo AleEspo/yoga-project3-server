@@ -11,6 +11,7 @@ const practiceSchema = new Schema({
     students: [{type: Types.ObjectId, ref: "User"}],
     orders: [{type: Types.ObjectId, ref: "Order"}],
     placesLeft: {type: Number, default: 0},
+    img: {type: String}
 // 1.24 aula terça x orders
 })
 

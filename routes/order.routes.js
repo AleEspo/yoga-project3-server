@@ -119,20 +119,7 @@ orderRouter.get("/", isAuth, attachCurrentUser, isAdmin, async (req, res) => {
     }
   });
 
-// SINGLE ORDER DETAILS PRA ADMIN
-orderRouter.get(":orderId", isAuth, attachCurrentUser, isAdmin, async (req, res) => {
-  try {
-    const order = await OrderModel.findOne({ _id: req.params.orderId });
-
-    return res.status(200).json(order);
-  } catch (err) {
-    console.log(err);
-    return res.status(500).json(err);
-  }
-});
-
-
-//TODAS AS ORDENS DO USUARIO
+  //TODAS AS ORDENS DO USUARIO
 orderRouter.get("/my-orders", isAuth, attachCurrentUser, async (req, res) => {
   try {
     const loggedInUser = req.currentUser;
@@ -140,6 +127,19 @@ orderRouter.get("/my-orders", isAuth, attachCurrentUser, async (req, res) => {
     const orders = await OrderModel.find({ customer: loggedInUser._id });
 
     return res.status(200).json(orders);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json(err);
+  }
+});
+
+
+// SINGLE ORDER DETAILS PRA ADMIN
+orderRouter.get(":orderId", isAuth, attachCurrentUser, isAdmin, async (req, res) => {
+  try {
+    const order = await OrderModel.findOne({ _id: req.params.orderId });
+
+    return res.status(200).json(order);
   } catch (err) {
     console.log(err);
     return res.status(500).json(err);

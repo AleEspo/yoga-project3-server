@@ -15,6 +15,7 @@ const userSchema = new Schema({
   practices: [{type: Types.ObjectId, ref: "Practice"}],
   teachers: [{type: Types.ObjectId, ref: "User"}],
   students: [{type: Types.ObjectId, ref: "User"}],
+  img: {type: String, required: true, default: "https://unsplash.com/photos/F2qh3yjz6Jk"},
   infos: {
     about: {type: String},
     age: {type: Number},

@@ -2,16 +2,22 @@ import {Schema, Types, model} from "mongoose"
 
 const practiceSchema = new Schema({
     name: {type: String, required: true, trim: true},
+    meeting: {type: String, required: true},
     type: {type: String, required: true, enum: ["Personal", "Group"]},
     price: {type: Number, required: true},
-    time: {type: Date, default: new Date(Date.now())},
+    placesLeft: {type: Number, default: 0, required: true},
+
+    // Define Date + input time front
+    date: {type: Date, required: true},
+    time: {type: String, required: true},
     tag: [{type: String, enum: ["Hatha", "Vinyasa", "Yin", "Power", "Roket", "Meditation", "Vipassana"]}],
     createdAt: {type: Date, default: new Date(Date.now())},
     teacher: {type: Types.ObjectId, ref: "Teacher"},
     students: [{type: Types.ObjectId, ref: "User"}],
     orders: [{type: Types.ObjectId, ref: "Order"}],
-    placesLeft: {type: Number, default: 0},
-    img: {type: String}
+    description:{type: String, required: true},
+    img: {type: String, required: true, default: "https://unsplash.com/photos/F2qh3yjz6Jk"},
+
 // 1.24 aula terça x orders
 })
 

@@ -1,7 +1,7 @@
 export default function isTeacher(req, res, next){
     const user = req.currentUser
 
-    if (user.role!== "TEACHER" || user.role!== "ADMIN" ){
+    if (user.role!== "TEACHER"){
         return res.status(401).json({msg: "User is not a teacher"})
     }
     next()

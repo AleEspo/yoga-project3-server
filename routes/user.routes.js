@@ -12,6 +12,7 @@ dotenv.config();
 
 const userRouter = express.Router();
 
+// CREATE
 userRouter.post("/signup", async (req, res) => {
   try {
     const { password } = req.body;
@@ -53,7 +54,7 @@ userRouter.post("/signup", async (req, res) => {
   }
 });
 
-// ALL TEACHERS
+//READ ALL TEACHERS
 userRouter.get("/teachers", async(req, res) => {
   try {
     const teachers = await UserModel.find({role: "TEACHER"})
@@ -112,7 +113,7 @@ userRouter.get("/your-students", isAuth, isTeacher, attachCurrentUser, async(req
   }
 })
 
-// update profile setting, PUT???
+// UPDATE update profile setting, PUT???
 userRouter.patch("/profile/settings", isAuth, attachCurrentUser, async(req, res) => {
   try {
     const loggedInUser = req.currentUser;
@@ -128,6 +129,7 @@ userRouter.patch("/profile/settings", isAuth, attachCurrentUser, async(req, res)
   }
 })
 
+// READ
 userRouter.get("/profile", isAuth, attachCurrentUser, async (req, res) => {
   const loggedInUser = req.currentUser;
   return res.status(200).json(loggedInUser);

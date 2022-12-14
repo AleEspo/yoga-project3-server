@@ -6,6 +6,7 @@ import { PracticeModel } from "../model/practice.model.js";
 
 const practiceRouter = express.Router();
 
+// CREATE
 practiceRouter.post(
   "/",
   isAuth,
@@ -27,7 +28,7 @@ practiceRouter.post(
   }
 );
 
-// all teacher practices?
+//READ: all teacher practices? check client
 practiceRouter.get(
   "/teacher-practices",
   isAuth,
@@ -48,6 +49,7 @@ practiceRouter.get(
   }
 );
 
+// READ: all practice
 practiceRouter.get(
   "/",
   async (req, res) => {
@@ -61,6 +63,7 @@ practiceRouter.get(
   }
 );
 
+// READ: single practice->client
 practiceRouter.get(
   "/:practiceId",
   async (req, res) => {
@@ -76,6 +79,7 @@ practiceRouter.get(
   }
 );
 
+// UPDATE: single practice teacher -> client; se id criador da pratica for igual ao id do teacher, abilita update
 practiceRouter.put(
   "/:practiceId",
   isAuth,
@@ -96,6 +100,7 @@ practiceRouter.put(
   }
 );
 
+// DELETE: single practice teacher -> client; se id criador da pratica for igual ao id do teacher, abilita delete
 practiceRouter.delete(
   "/:practiceId",
   isAuth,

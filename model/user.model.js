@@ -29,6 +29,7 @@ const userSchema = new Schema({
       default:
         "https://res.cloudinary.com/dvvtr5bi2/image/upload/v1670981627/kike-vega-F2qh3yjz6Jk-unsplash_gi5znx.jpg",
     },
+    otherPhotos: [{type: String}]
   },
 });
 

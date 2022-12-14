@@ -8,6 +8,8 @@ import { UserModel } from "../model/user.model.js";
 
 const orderRouter = express.Router();
 
+
+//CREATE
 orderRouter.post("/", isAuth, attachCurrentUser, async (req, res) => {
   try {
 
@@ -42,12 +44,12 @@ orderRouter.post("/", isAuth, attachCurrentUser, async (req, res) => {
   }
 });
 
-  //TODAS AS ORDENS DO USUARIO
+  // READ: TODAS AS ORDENS DO USUARIO -> POPULATE?
   orderRouter.get("/my-orders", isAuth, attachCurrentUser, async (req, res) => {
     try {
       const loggedInUser = req.currentUser;
   
-      const orders = await OrderModel.find({ customer: loggedInUser._id });
+      const orders = await OrderModel.find({ customer: loggedInUser._id }).populate("teacher").populate("consumer").populate("practice");
   
       return res.status(200).json(orders);
     } catch (err) {
@@ -56,6 +58,7 @@ orderRouter.post("/", isAuth, attachCurrentUser, async (req, res) => {
     }
   });
 
+// UPDATE/CANCEL->client
 orderRouter.patch(
   "/cancel-order/:orderId",
   isAuth,
@@ -85,7 +88,7 @@ orderRouter.patch(
   }
 );
 
-
+//UPDATE->client
 orderRouter.patch(
   "/update-status/:orderId",
   isAuth,
@@ -120,7 +123,7 @@ orderRouter.patch(
 );
 
 
-// ALL ORDERS PRA ADMIN
+// READ: ALL ORDERS PRA ADMIN ->client
 orderRouter.get("/", isAuth, attachCurrentUser, isAdmin, async (req, res) => {
     try {
       const orders = await OrderModel.findOne({});
@@ -135,8 +138,8 @@ orderRouter.get("/", isAuth, attachCurrentUser, isAdmin, async (req, res) => {
 
 
 
-// SINGLE ORDER DETAILS PRA ADMIN
-orderRouter.get(":orderId", isAuth, attachCurrentUser, isAdmin, async (req, res) => {
+// READ: SINGLE ORDER DETAILS PRA ADMIN ->client
+orderRouter.get("/:orderId", isAuth, attachCurrentUser, isAdmin, async (req, res) => {
   try {
     const order = await OrderModel.findOne({ _id: req.params.orderId });
 
@@ -148,7 +151,7 @@ orderRouter.get(":orderId", isAuth, attachCurrentUser, isAdmin, async (req, res)
 });
 
 
-// DETALHES DUMA ORDEM DO USUARIO LOGADO
+// READ: DETALHES DUMA ORDEM DO USUARIO LOGADO ->client
 orderRouter.get(
   "/my-orders/:orderId",
   isAuth,

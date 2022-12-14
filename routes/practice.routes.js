@@ -27,6 +27,27 @@ practiceRouter.post(
   }
 );
 
+// all teacher practices?
+practiceRouter.get(
+  "/teacher-practices",
+  isAuth,
+  attachCurrentUser,
+  async (req, res) => {
+    try {
+      const loggedInUser = req.currentUser;
+      const practice = await PracticeModel.find({
+        ...req.body,
+        teacher: loggedInUser._id,
+      });
+
+      return res.status(201).json(practice);
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json(err);
+    }
+  }
+);
+
 practiceRouter.get(
   "/",
   async (req, res) => {
@@ -92,5 +113,6 @@ practiceRouter.delete(
     }
   }
 );
+
 
 export { practiceRouter };

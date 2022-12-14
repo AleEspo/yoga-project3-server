@@ -11,7 +11,6 @@ const orderRouter = express.Router();
 orderRouter.post("/", isAuth, attachCurrentUser, async (req, res) => {
   try {
 
-    // ERRO AQUI 
     const practice = await PracticeModel.findOne({ _id: req.body.practice });
 
     if (practice.placesLeft === 0) {
@@ -42,6 +41,20 @@ orderRouter.post("/", isAuth, attachCurrentUser, async (req, res) => {
     // PROBLEMA AQUI
   }
 });
+
+  //TODAS AS ORDENS DO USUARIO
+  orderRouter.get("/my-orders", isAuth, attachCurrentUser, async (req, res) => {
+    try {
+      const loggedInUser = req.currentUser;
+  
+      const orders = await OrderModel.find({ customer: loggedInUser._id });
+  
+      return res.status(200).json(orders);
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json(err);
+    }
+  });
 
 orderRouter.patch(
   "/cancel-order/:orderId",
@@ -119,19 +132,7 @@ orderRouter.get("/", isAuth, attachCurrentUser, isAdmin, async (req, res) => {
     }
   });
 
-  //TODAS AS ORDENS DO USUARIO
-orderRouter.get("/my-orders", isAuth, attachCurrentUser, async (req, res) => {
-  try {
-    const loggedInUser = req.currentUser;
 
-    const orders = await OrderModel.find({ customer: loggedInUser._id });
-
-    return res.status(200).json(orders);
-  } catch (err) {
-    console.log(err);
-    return res.status(500).json(err);
-  }
-});
 
 
 // SINGLE ORDER DETAILS PRA ADMIN

@@ -9,20 +9,27 @@ const userSchema = new Schema({
     trim: true,
     match: /[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+/gm,
   },
-  passwordHash: {type: String, required: true},
-  role: {type: String, enum: ["ADMIN", "TEACHER", "USER"], default: "USER"},
-  orders: [{type: Types.ObjectId, ref: "Order"}],
-  practices: [{type: Types.ObjectId, ref: "Practice"}],
-  teachers: [{type: Types.ObjectId, ref: "User"}],
-  students: [{type: Types.ObjectId, ref: "User"}],
-  img: {type: String, required: true, default: "https://unsplash.com/photos/F2qh3yjz6Jk"},
+  passwordHash: { type: String, required: true },
+  role: { type: String, enum: ["ADMIN", "TEACHER", "USER"], default: "USER" },
+  orders: [{ type: Types.ObjectId, ref: "Order" }],
+  practices: [{ type: Types.ObjectId, ref: "Practice" }],
+  teachers: [{ type: Types.ObjectId, ref: "User" }],
+  students: [{ type: Types.ObjectId, ref: "User" }],
   infos: {
-    about: {type: String},
-    age: {type: Number},
-    avatar: {type: String},
-    photos: {type: String},
-    socialMedia: [],
-  }
+    about: { type: String },
+    country: { type: String },
+    age: { type: Number },
+    img: {
+      type: String,
+      default:
+        "https://res.cloudinary.com/dvvtr5bi2/image/upload/v1670969231/user_icon_lwaqnq.png",
+    },
+    coverPhoto: {
+      type: String,
+      default:
+        "https://res.cloudinary.com/dvvtr5bi2/image/upload/v1670981627/kike-vega-F2qh3yjz6Jk-unsplash_gi5znx.jpg",
+    },
+  },
 });
 
 export const UserModel = model("User", userSchema);

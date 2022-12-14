@@ -53,6 +53,18 @@ userRouter.post("/signup", async (req, res) => {
   }
 });
 
+// ALL TEACHERS
+userRouter.get("/teachers", async(req, res) => {
+  try {
+    const teachers = await UserModel.find({role: "TEACHER"})
+
+    return res.status(200).json(teachers)
+  } catch (err){
+    console.log(err)
+    return res.status(500).json(err)
+  }
+})
+
 userRouter.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -85,6 +97,36 @@ userRouter.post("/login", async (req, res) => {
     console.log(err);
   }
 });
+
+
+//SPECIFIC TEACHER's STUDENTS
+userRouter.get("/your-students", isAuth, isTeacher, attachCurrentUser, async(req, res) => {
+  try {
+    const loggedInUser = req.currentUser;
+    const yourStudents = await UserModel.find({teachers: loggedInUser._id})
+
+    return res.status(200).json(yourStudents)
+  } catch (err){
+    console.log(err)
+    return res.status(500).json(err)
+  }
+})
+
+// update profile setting, PUT???
+userRouter.patch("/profile/settings", isAuth, attachCurrentUser, async(req, res) => {
+  try {
+    const loggedInUser = req.currentUser;
+    const updatedUser = await UserModel.findOneAndUpdate({id: loggedInUser._id}, 
+      { ...req.body },
+      { new: true, runValidators: true }
+    );
+    return res.status(200).json(updatedUser);
+  } catch (err){
+    console.log(err)
+    return res.status(500).json(err)
+    
+  }
+})
 
 userRouter.get("/profile", isAuth, attachCurrentUser, async (req, res) => {
   const loggedInUser = req.currentUser;

@@ -12,7 +12,7 @@ const practiceSchema = new Schema({
     time: {type: String, required: true},
     tag: [{type: String, enum: ["Hatha", "Vinyasa", "Yin", "Power", "Roket", "Meditation", "Vipassana"]}],
     createdAt: {type: Date, default: new Date(Date.now())},
-    teacher: {type: Types.ObjectId, ref: "Teacher"},
+    teacher: {type: Types.ObjectId, ref: "User"},
     students: [{type: Types.ObjectId, ref: "User"}],
     orders: [{type: Types.ObjectId, ref: "Order"}],
     description:{type: String, required: true},

@@ -41,7 +41,7 @@ userRouter.post("/signup", async (req, res) => {
     const createdUser = await UserModel.create({
       ...req.body,
       passwordHash: hashedPassword,
-      role: "USER"
+      // role: "USER" -> NO X TRACHER!!!
       // pra criar novos admin, criar uma rota custom que so um admin pode criar pra criar outros admin
     });
 
@@ -114,9 +114,10 @@ userRouter.get("/your-students", isAuth, isTeacher, attachCurrentUser, async(req
 })
 
 // UPDATE update profile setting, PUT???
-userRouter.patch("/profile/settings", isAuth, attachCurrentUser, async(req, res) => {
+userRouter.put("/settings", isAuth, attachCurrentUser, async(req, res) => {
   try {
     const loggedInUser = req.currentUser;
+    delete req.body.email
     const updatedUser = await UserModel.findOneAndUpdate({id: loggedInUser._id}, 
       { ...req.body },
       { new: true, runValidators: true }

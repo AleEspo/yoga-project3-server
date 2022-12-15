@@ -10,7 +10,7 @@ const userSchema = new Schema({
     match: /[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+/gm,
   },
   passwordHash: { type: String, required: true },
-  role: { type: String, enum: ["ADMIN", "TEACHER", "USER"], default: "USER" },
+  role: { type: String, enum: ["ADMIN", "TEACHER", "USER"] },
   orders: [{ type: Types.ObjectId, ref: "Order" }],
   practices: [{ type: Types.ObjectId, ref: "Practice" }],
   teachers: [{ type: Types.ObjectId, ref: "User" }],
@@ -19,15 +19,9 @@ const userSchema = new Schema({
   country: { type: String },
   age: { type: Number },
   img: {
-    type: String,
-    default:
-      "https://res.cloudinary.com/dvvtr5bi2/image/upload/v1670969231/user_icon_lwaqnq.png",
-  },
+    type: String},
   coverPhoto: {
-    type: String,
-    default:
-      "https://res.cloudinary.com/dvvtr5bi2/image/upload/v1670981627/kike-vega-F2qh3yjz6Jk-unsplash_gi5znx.jpg",
-  },
+    type: String},
   otherPhotos: [{ type: String }],
 });
 

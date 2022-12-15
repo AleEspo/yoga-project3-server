@@ -5,6 +5,7 @@ import isTeacher from "../middlewares/isTeacher.js";
 import isCreator from "../middlewares/isCreator.js";
 import { PracticeModel } from "../model/practice.model.js";
 import { OrderModel } from "../model/order.model.js";
+import { UserModel } from "../model/user.model.js";
 
 const practiceRouter = express.Router();
 
@@ -17,12 +18,17 @@ practiceRouter.post(
   async (req, res) => {
     try {
       const loggedInUser = req.currentUser;
-      const practice = await PracticeModel.create({
+      const newPractice = await PracticeModel.create({
         ...req.body,
         teacher: loggedInUser._id,
       });
 
-      return res.status(201).json(practice);
+      await UserModel.findOneAndUpdate(
+        { id: loggedInUser._id },
+        {practices: newPractice._id} //GET PRACTICE ID (just created?)?????????
+      );
+
+      return res.status(201).json(newPractice);
     } catch (err) {
       console.log(err);
       return res.status(500).json(err);
@@ -108,9 +114,10 @@ practiceRouter.delete(
         _id: req.params.practiceId,
       });
 
-      const teacher = req.currentUser._id
+      const teacher = req.currentUser._id;
 
-      if (practice.teacher === `new ObjectId(\"${teacher}"\)`) {
+      if (practice.teacher.equals(teacher)) {
+        // DUE DATE PASSED CONDITIONAL?
 
         const cancelledOrders = await OrderModel.updateMany(
           { practice: req.params.practiceId },
@@ -124,7 +131,11 @@ practiceRouter.delete(
 
         return res.status(200).json(deletePractice);
       }
-      return res.status(400).json({msn: `Practice: ${practice}. Teacher: ${teacher}. Teacher modified: ${`new ObjectId(\"${teacher}"\)`}`})
+      return res
+        .status(400)
+        .json({
+          msn: `Practice: ${practice}. Teacher: ${teacher}. Teacher modified: ${`new ObjectId(\"${teacher}"\)`}`,
+        });
     } catch (err) {
       console.log(err);
       return res.status(500).json(err);

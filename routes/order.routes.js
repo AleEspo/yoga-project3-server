@@ -8,11 +8,9 @@ import { UserModel } from "../model/user.model.js";
 
 const orderRouter = express.Router();
 
-
 //CREATE
 orderRouter.post("/", isAuth, attachCurrentUser, async (req, res) => {
   try {
-
     const practice = await PracticeModel.findOne({ _id: req.body.practice });
 
     if (practice.placesLeft === 0) {
@@ -31,10 +29,18 @@ orderRouter.post("/", isAuth, attachCurrentUser, async (req, res) => {
       { runValidators: true }
     );
 
+
+    //PUSH STUDENTS??
+    await UserModel.findOneAndUpdate(
+      { _id: practice.teacher },
+      { $push: { students: loggedInUser._id } },
+      { runValidators: true }
+    );
+
     await PracticeModel.findOneAndUpdate(
-        { _id: practice._id },
-        { placesLeft: practice.placesLeft - 1, $push: { orders: order._id } }
-      );
+      { _id: practice._id },
+      { placesLeft: practice.placesLeft - 1, $push: { orders: order._id } }
+    );
 
     return res.status(201).json(order);
   } catch (err) {
@@ -44,19 +50,22 @@ orderRouter.post("/", isAuth, attachCurrentUser, async (req, res) => {
   }
 });
 
-  // READ: TODAS AS ORDENS DO USUARIO -> POPULATE?
-  orderRouter.get("/my-orders", isAuth, attachCurrentUser, async (req, res) => {
-    try {
-      const loggedInUser = req.currentUser;
-  
-      const orders = await OrderModel.find({ customer: loggedInUser._id }).populate("teacher").populate("consumer").populate("practice");
-  
-      return res.status(200).json(orders);
-    } catch (err) {
-      console.log(err);
-      return res.status(500).json(err);
-    }
-  });
+// READ: TODAS AS ORDENS DO USUARIO -> POPULATE?
+orderRouter.get("/my-orders", isAuth, attachCurrentUser, async (req, res) => {
+  try {
+    const loggedInUser = req.currentUser;
+
+    const orders = await OrderModel.find({ customer: loggedInUser._id })
+      .populate("teacher")
+      .populate("consumer")
+      .populate("practice");
+
+    return res.status(200).json(orders);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json(err);
+  }
+});
 
 // UPDATE/CANCEL->client
 orderRouter.patch(
@@ -122,34 +131,69 @@ orderRouter.patch(
   }
 );
 
-
-// READ: ALL ORDERS PRA ADMIN ->client
-orderRouter.get("/", isAuth, attachCurrentUser, isAdmin, async (req, res) => {
+// UPDATE ORDER STATUS TO CANCELLED (FAKE DELETE)
+orderRouter.patch(
+  "/update-status/:orderId",
+  isAuth,
+  attachCurrentUser,
+  async (req, res) => {
     try {
-      const orders = await OrderModel.findOne({});
-  
-      return res.status(200).json(orders);
+      const loggedInUser = req.currentUser;
+
+      const order = await OrderModel.findOne({ _id: req.params.orderId });
+
+      if (order.consumer === loggedInUser) {
+        const updateOrder = await OrderModel.findOneAndUpdate(
+          { _id: req.params.orderId },
+          { status: "Cancelled by user" },
+          { new: true, runValidators: true }
+        );
+
+        const practice = await PracticeModel.findOne({ _id: practice._id });
+
+        await PracticeModel.finsOneAndUpdate(
+          { _id: practice._id },
+          { placesLeft: practice.placesLeft + 1 }
+        );
+
+        return res.status(200).json(updateOrder);
+      }
     } catch (err) {
       console.log(err);
       return res.status(500).json(err);
     }
-  });
+  }
+);
 
-
-
-
-// READ: SINGLE ORDER DETAILS PRA ADMIN ->client
-orderRouter.get("/:orderId", isAuth, attachCurrentUser, isAdmin, async (req, res) => {
+// READ: ALL ORDERS PRA ADMIN ->client
+orderRouter.get("/", isAuth, attachCurrentUser, isAdmin, async (req, res) => {
   try {
-    const order = await OrderModel.findOne({ _id: req.params.orderId });
+    const orders = await OrderModel.findOne({});
 
-    return res.status(200).json(order);
+    return res.status(200).json(orders);
   } catch (err) {
     console.log(err);
     return res.status(500).json(err);
   }
 });
 
+// READ: SINGLE ORDER DETAILS PRA ADMIN ->client
+orderRouter.get(
+  "/:orderId",
+  isAuth,
+  attachCurrentUser,
+  isAdmin,
+  async (req, res) => {
+    try {
+      const order = await OrderModel.findOne({ _id: req.params.orderId });
+
+      return res.status(200).json(order);
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json(err);
+    }
+  }
+);
 
 // READ: DETALHES DUMA ORDEM DO USUARIO LOGADO ->client
 orderRouter.get(
@@ -175,7 +219,5 @@ orderRouter.get(
     }
   }
 );
-
-
 
 export { orderRouter };

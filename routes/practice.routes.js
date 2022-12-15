@@ -2,7 +2,9 @@ import express from "express";
 import attachCurrentUser from "../middlewares/attachCurrentUser.js";
 import isAuth from "../middlewares/isAuth.js";
 import isTeacher from "../middlewares/isTeacher.js";
+import isCreator from "../middlewares/isCreator.js";
 import { PracticeModel } from "../model/practice.model.js";
+import { OrderModel } from "../model/order.model.js";
 
 const practiceRouter = express.Router();
 
@@ -50,34 +52,28 @@ practiceRouter.get(
 );
 
 // READ: all practice
-practiceRouter.get(
-  "/",
-  async (req, res) => {
-    try {
-      const practice = await PracticeModel.find({});
-      return res.status(200).json(practice);
-    } catch (err) {
-      console.log(err);
-      return res.status(500).json(err);
-    }
+practiceRouter.get("/", async (req, res) => {
+  try {
+    const practice = await PracticeModel.find({});
+    return res.status(200).json(practice);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json(err);
   }
-);
+});
 
 // READ: single practice->client
-practiceRouter.get(
-  "/:practiceId",
-  async (req, res) => {
-    try {
-      const practice = await PracticeModel.findOne({
-        _id: req.params.productId,
-      });
-      return res.status(200).json(practice);
-    } catch (err) {
-      console.log(err);
-      return res.status(500).json(err);
-    }
+practiceRouter.get("/:practiceId", async (req, res) => {
+  try {
+    const practice = await PracticeModel.findOne({
+      _id: req.params.practiceId,
+    });
+    return res.status(200).json(practice);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json(err);
   }
-);
+});
 
 // UPDATE: single practice teacher -> client; se id criador da pratica for igual ao id do teacher, abilita update
 practiceRouter.put(
@@ -108,16 +104,32 @@ practiceRouter.delete(
   isTeacher,
   async (req, res) => {
     try {
-      const deletePractice = await PracticeModel.deleteOne({
+      const practice = await PracticeModel.findOne({
         _id: req.params.practiceId,
       });
-      return res.status(200).json(deletePractice);
+
+      const teacher = req.currentUser._id
+
+      if (practice.teacher === `new ObjectId(\"${teacher}"\)`) {
+
+        const cancelledOrders = await OrderModel.updateMany(
+          { practice: req.params.practiceId },
+          { status: "Cancelled by teacher" },
+          { runValidators: true }
+        );
+
+        const deletePractice = await PracticeModel.deleteOne({
+          _id: req.params.practiceId,
+        });
+
+        return res.status(200).json(deletePractice);
+      }
+      return res.status(400).json({msn: `Practice: ${practice}. Teacher: ${teacher}. Teacher modified: ${`new ObjectId(\"${teacher}"\)`}`})
     } catch (err) {
       console.log(err);
       return res.status(500).json(err);
     }
   }
 );
-
 
 export { practiceRouter };

@@ -15,22 +15,20 @@ const userSchema = new Schema({
   practices: [{ type: Types.ObjectId, ref: "Practice" }],
   teachers: [{ type: Types.ObjectId, ref: "User" }],
   students: [{ type: Types.ObjectId, ref: "User" }],
-  infos: {
-    about: { type: String },
-    country: { type: String },
-    age: { type: Number },
-    img: {
-      type: String,
-      default:
-        "https://res.cloudinary.com/dvvtr5bi2/image/upload/v1670969231/user_icon_lwaqnq.png",
-    },
-    coverPhoto: {
-      type: String,
-      default:
-        "https://res.cloudinary.com/dvvtr5bi2/image/upload/v1670981627/kike-vega-F2qh3yjz6Jk-unsplash_gi5znx.jpg",
-    },
-    otherPhotos: [{type: String}]
+  about: { type: String },
+  country: { type: String },
+  age: { type: Number },
+  img: {
+    type: String,
+    default:
+      "https://res.cloudinary.com/dvvtr5bi2/image/upload/v1670969231/user_icon_lwaqnq.png",
   },
+  coverPhoto: {
+    type: String,
+    default:
+      "https://res.cloudinary.com/dvvtr5bi2/image/upload/v1670981627/kike-vega-F2qh3yjz6Jk-unsplash_gi5znx.jpg",
+  },
+  otherPhotos: [{ type: String }],
 });
 
 export const UserModel = model("User", userSchema);

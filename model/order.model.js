@@ -14,7 +14,8 @@ const orderSchema = new Schema({
       "Receipt emitted",
       "Sent",
       "Delivered",
-      "Cancelled",
+      "Cancelled by user",
+      "Cancelled by teacher"
     ],
     default: "Received"
   },

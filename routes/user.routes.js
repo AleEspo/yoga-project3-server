@@ -4,8 +4,8 @@ import bcrypt from "bcrypt";
 import * as dotenv from "dotenv";
 import { generateToken } from "../config/jwt.config.js";
 import isAuth from "../middlewares/isAuth.js";
-import attachCurrentUser  from "../middlewares/attachCurrentUser.js";
-import isAdmin from "../middlewares/isAdmin.js"
+import attachCurrentUser from "../middlewares/attachCurrentUser.js";
+import isAdmin from "../middlewares/isAdmin.js";
 import isTeacher from "../middlewares/isTeacher.js";
 
 dotenv.config();
@@ -55,16 +55,16 @@ userRouter.post("/signup", async (req, res) => {
 });
 
 //READ ALL TEACHERS
-userRouter.get("/teachers", async(req, res) => {
+userRouter.get("/teachers", async (req, res) => {
   try {
-    const teachers = await UserModel.find({role: "TEACHER"})
+    const teachers = await UserModel.find({ role: "TEACHER" });
 
-    return res.status(200).json(teachers)
-  } catch (err){
-    console.log(err)
-    return res.status(500).json(err)
+    return res.status(200).json(teachers);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json(err);
   }
-})
+});
 
 userRouter.post("/login", async (req, res) => {
   try {
@@ -99,41 +99,52 @@ userRouter.post("/login", async (req, res) => {
   }
 });
 
-
 //SPECIFIC TEACHER's STUDENTS
-userRouter.get("/your-students", isAuth, isTeacher, attachCurrentUser, async(req, res) => {
-  try {
-    const loggedInUser = req.currentUser;
-    const yourStudents = await UserModel.find({teachers: loggedInUser._id})
+userRouter.get(
+  "/your-students",
+  isAuth,
+  isTeacher,
+  attachCurrentUser,
+  async (req, res) => {
+    try {
+      const loggedInUser = req.currentUser;
+      const yourStudents = await UserModel.find({ teachers: loggedInUser._id });
 
-    return res.status(200).json(yourStudents)
-  } catch (err){
-    console.log(err)
-    return res.status(500).json(err)
+      return res.status(200).json(yourStudents);
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json(err);
+    }
   }
-})
+);
 
 // UPDATE update profile setting, PUT???
-userRouter.put("/settings", isAuth, attachCurrentUser, async(req, res) => {
+userRouter.post("/settings", isAuth, attachCurrentUser, async (req, res) => {
   try {
     const loggedInUser = req.currentUser;
-    delete req.body.email
-    const updatedUser = await UserModel.findOneAndUpdate({id: loggedInUser._id}, 
+    delete req.body.email;
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { id: loggedInUser._id },
       { ...req.body },
       { new: true, runValidators: true }
     );
     return res.status(200).json(updatedUser);
-  } catch (err){
-    console.log(err)
-    return res.status(500).json(err)
-    
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json(err);
   }
-})
+});
 
-// READ
+// READ ->
 userRouter.get("/profile", isAuth, attachCurrentUser, async (req, res) => {
-  const loggedInUser = req.currentUser;
-  return res.status(200).json(loggedInUser);
+  try {
+    const loggedInUser = req.currentUser;
+    const user = await UserModel.findOne({ id: loggedInUser._id })
+    return res.status(200).json(user);
+  } catch (err) {
+    console.log(errr);
+    return res.status(500).json(err);
+  }
 });
 
 export { userRouter };

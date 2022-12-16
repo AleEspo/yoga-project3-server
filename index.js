@@ -22,3 +22,5 @@ app.use("/upload-image", uploadImageRouter)
 app.listen(Number(process.env.PORT), () => {
   console.log(`Server up at port ${process.env.PORT}`);
 });
+
+// BIBLIOTECAS? npm install multer cloudinary multer-storage-cloudinary

@@ -2,7 +2,6 @@ import express from "express";
 import attachCurrentUser from "../middlewares/attachCurrentUser.js";
 import isAuth from "../middlewares/isAuth.js";
 import isTeacher from "../middlewares/isTeacher.js";
-import isCreator from "../middlewares/isCreator.js";
 import { PracticeModel } from "../model/practice.model.js";
 import { OrderModel } from "../model/order.model.js";
 import { UserModel } from "../model/user.model.js";

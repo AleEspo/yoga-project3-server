@@ -119,7 +119,7 @@ userRouter.get(
 );
 
 // UPDATE update profile setting, PUT???
-userRouter.post("/settings", isAuth, attachCurrentUser, async (req, res) => {
+userRouter.post("/update", isAuth, attachCurrentUser, async (req, res) => {
   try {
     const loggedInUser = req.currentUser;
     delete req.body.email;
@@ -139,10 +139,9 @@ userRouter.post("/settings", isAuth, attachCurrentUser, async (req, res) => {
 userRouter.get("/profile", isAuth, attachCurrentUser, async (req, res) => {
   try {
     const loggedInUser = req.currentUser;
-    const user = await UserModel.findOne({ id: loggedInUser._id })
-    return res.status(200).json(user);
+    return res.status(200).json(loggedInUser);
   } catch (err) {
-    console.log(errr);
+    console.log(err);
     return res.status(500).json(err);
   }
 });

@@ -59,7 +59,7 @@ practiceRouter.get(
 // READ: all practice
 practiceRouter.get("/", async (req, res) => {
   try {
-    const practice = await PracticeModel.find({});
+    const practice = await PracticeModel.find({}).populate("teacher");
     return res.status(200).json(practice);
   } catch (err) {
     console.log(err);

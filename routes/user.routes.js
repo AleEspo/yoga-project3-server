@@ -118,7 +118,7 @@ userRouter.get(
   }
 );
 
-// UPDATE update profile setting, PUT???
+// UPDATE update setting, PUT???
 userRouter.post("/update", isAuth, attachCurrentUser, async (req, res) => {
   try {
     const loggedInUser = req.currentUser;

@@ -22,6 +22,8 @@ orderRouter.post("/", isAuth, attachCurrentUser, async (req, res) => {
     const order = await OrderModel.create({
       ...req.body,
       consumer: loggedInUser._id,
+      practice: practice._id,
+      teacher: practice.teacher,
     });
 
     // update student-user model
@@ -72,8 +74,7 @@ orderRouter.get("/my-orders", isAuth, attachCurrentUser, async (req, res) => {
 
     const orders = await OrderModel.find({
       customer: loggedInUser._id,
-    }).populate("practice");
-    // .populate("teacher")
+    }).populate("practice").populate("teacher")
     // .populate("consumer")
 
     return res.status(200).json(orders);

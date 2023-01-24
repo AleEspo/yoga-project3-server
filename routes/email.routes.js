@@ -8,15 +8,23 @@ emailRouter.post("/contact-us", (req, res, next) => {
   const { email, subject, message } = req.body;
 
   transporter
-    .sendEmail({
-      from: `"My Awesome Project " <${process.env.EMAIL_ADDRESS}>`,
+    .sendMail({
+      from: `<${process.env.EMAIL_ADDRESS}>`,
       to: email,
       subject: subject,
       text: message,
       html: templateExample(message),
     })
-    .then((info) => res.render("message", { email, subject, message, info }))
-    .catch((error) => console.log(error));
+    .then(() => {
+      res.json({
+        message: "SUCESS",
+        message: `The message ${subject} was sucessfully sent to ${email}. Body of the email ${message}`,
+      });
+    })
+    .catch((error) => {
+      console.log(error);
+      res.json({ status: "FAILED", message: "An error occurred" });
+    });
 });
 
 export { emailRouter };

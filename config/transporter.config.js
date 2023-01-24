@@ -1,10 +1,19 @@
-import nodemailer from "nodemailer"
+import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-  service: 'hotmail',
+  service: "hotmail",
   auth: {
-    user: process.env.EMAIL_ADDRESS,
-    pass: process.env.EMAIL_PASSWORD
+    user: process.env.EMAIL_ADDRESS_HOTMAIL,
+    pass: process.env.EMAIL_PASSWORD,
+  },
+});
+
+transporter.verify((error, success) => {
+  if (error) {
+    console.log(error);
+  } else {
+    console.log("Ready for message");
+    console.log(success);
   }
 });
 

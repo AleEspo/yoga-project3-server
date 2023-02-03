@@ -1,5 +1,6 @@
 import express from "express";
 import { UserModel } from "../model/user.model.js";
+import { UserVerificationModel } from "../model/userVerification.js";
 import bcrypt from "bcrypt";
 import * as dotenv from "dotenv";
 import { generateToken } from "../config/jwt.config.js";
@@ -8,6 +9,8 @@ import attachCurrentUser from "../middlewares/attachCurrentUser.js";
 import isAdmin from "../middlewares/isAdmin.js";
 import isTeacher from "../middlewares/isTeacher.js";
 import jwt from "jsonwebtoken";
+import transporter from "../config/transporter.config.js";
+import { v4 as uuidv4 } from "uuid";
 
 dotenv.config();
 
@@ -42,8 +45,13 @@ userRouter.post("/signup", async (req, res) => {
     const createdUser = await UserModel.create({
       ...req.body,
       passwordHash: hashedPassword,
+      verified: false,
       // role: "USER" -> NO X TRACHER!!!
       // pra criar novos admin, criar uma rota custom que so um admin pode criar pra criar outros admin
+    }).then((result) => {
+      sendVerificationEmail(result, res);
+
+      console.log(`Result is: ${result}. Res is: ${res}`);
     });
 
     delete createdUser._doc.passwordHash;
@@ -54,6 +62,69 @@ userRouter.post("/signup", async (req, res) => {
     return res.status(500).json(err);
   }
 });
+
+// send verification email
+
+const sendVerificationEmail = ({ _id, email }, res) => {
+  const currentUrl = Number(process.env.PORT);
+
+  const uniqueString = uuidv4() + _id;
+
+  const mailOptions = {
+    from: `<${process.env.EMAIL_ADDRESS}>`,
+    to: email,
+    subject: "Verify your email",
+    html: `<p>Verify your email adress to complete the signup and login into your account.</p><p>This link expires in 6 hours.</b></p><p>Press <a href=${
+      currentUrl + "user/verify/" + _id + "/" + uniqueString
+    }>here</a> to proceed.</p>`,
+  };
+
+  // hash the uniqueString
+  // const salt = await bcrypt.genSalt(Number(process.env.SALT_ROUNDS));
+
+  // const hashedUniqueString = await bcrypt.hash(uniqueString, salt);
+
+  const saltRounds = 10;
+  bcrypt
+    .hash(uniqueString, saltRounds)
+    .then((hashedUniqueString) => {
+      const newVerification = UserVerification({
+        userId: _id,
+        uniqueString: hashedUniqueString,
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 21600000,
+      });
+
+      newVerification
+        .save()
+        .then(() => {
+          transporter
+            .sendMail(mailOptions)
+            .then(() => {
+              res.json({
+                status: "PENDING",
+                message: "Verification email sent",
+              });
+            })
+            .catch(error);
+          res.json({
+            status: "FAILED",
+            message: "Verification email failed",
+          });
+        })
+        .catch((error) => {
+          console.log(error);
+          res.json({
+            status: "FAILED",
+            message: "Couldn't save verification email data.",
+          });
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return res.status(500).json(err);
+    });
+};
 
 // RECEIVE EMAIL USER
 userRouter.post("/forgot-password", async (req, res) => {
@@ -74,12 +145,12 @@ userRouter.post("/forgot-password", async (req, res) => {
     }
 
     const user = await UserModel.findOne({ email: email });
-   
+
     // CHANGE MESSAGE FOR SECURITY
-    if (!user){
+    if (!user) {
       return res.status(400).json({
-        msg: "Email does not exist in our database"
-      })
+        msg: "Email does not exist in our database",
+      });
     }
 
     const { _id, name, email, role } = user;
@@ -89,10 +160,10 @@ userRouter.post("/forgot-password", async (req, res) => {
 
     const token = jwt.sign({ _id, name, email, role }, signature, {
       expiresIn: expiration,
-    })
+    });
 
-    const link = `http://localhost:4000/reset-password/${user._id}/${token}`
-    console.log(link)
+    const link = `http://localhost:4000/reset-password/${user._id}/${token}`;
+    console.log(link);
     // return res.status(200).json({msg:`${link}`})
   } catch (err) {
     console.log(err);
@@ -128,12 +199,15 @@ userRouter.post("/reset-password", async (req, res) => {
 
     const loggedInUser = req.currentUser;
 
-    const updatePassword = await UserModel.findOneAndUpdate({id: loggedInUser._id}, {
-      ...req.body,
-      passwordHash: newHashedPassword,
-      // role: "USER" -> NO X TRACHER!!!
-      // pra criar novos admin, criar uma rota custom que so um admin pode criar pra criar outros admin
-    });
+    const updatePassword = await UserModel.findOneAndUpdate(
+      { id: loggedInUser._id },
+      {
+        ...req.body,
+        passwordHash: newHashedPassword,
+        // role: "USER" -> NO X TRACHER!!!
+        // pra criar novos admin, criar uma rota custom que so um admin pode criar pra criar outros admin
+      }
+    );
 
     delete createdUser._doc.passwordHash;
 

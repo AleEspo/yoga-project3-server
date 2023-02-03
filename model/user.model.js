@@ -10,6 +10,7 @@ const userSchema = new Schema({
     match: /[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+/gm,
   },
   passwordHash: { type: String, required: true },
+  verified: { type: Boolean },
   role: { type: String, enum: ["ADMIN", "TEACHER", "USER"] },
   orders: [{ type: Types.ObjectId, ref: "Order" }],
   practices: [{ type: Types.ObjectId, ref: "Practice" }],

@@ -11,6 +11,7 @@ import isTeacher from "../middlewares/isTeacher.js";
 import jwt from "jsonwebtoken";
 import transporter from "../config/transporter.config.js";
 import { v4 as uuidv4 } from "uuid";
+import * as path from "path"
 
 dotenv.config();
 
@@ -109,7 +110,7 @@ const sendVerificationEmail = ({ _id, email }, res) => {
             .catch(error);
           res.json({
             status: "FAILED",
-            message: "Verification email failed",
+            message: "Verification email failed.",
           });
         })
         .catch((error) => {
@@ -120,11 +121,49 @@ const sendVerificationEmail = ({ _id, email }, res) => {
           });
         });
     })
-    .catch((err) => {
-      console.log(err);
-      return res.status(500).json(err);
+    .catch((error) => {
+      console.log(error);
+      res.json({
+        status: "FAILED",
+        message: "An error occurred while hashing email data.",
+      });
     });
 };
+
+// verify email
+userRouter.get("/verify/:userId/:uniqueString", (req, res) => {
+  let { userId, uniqueString } = req.params;
+  UserVerification.find({ userId })
+    .then((result)=>{
+      if (result.length > 0){
+        // user verification record exist -> we proceed
+        const {expiresAt} = result[0];
+
+        //checking for expired unique string
+        if (expiresAt < Date.now()){
+          // record has expired so we delete it
+          UserVerification.deleteOne({userId}).then().catch((error)=>{
+            console.log(error)
+            let message = "An error occurred while clearing user verification record";
+    res.redirect(`/user/verified/error=true&message=${message}`)
+          })
+        
+        }
+      } else {
+        // user verification record does not exist -> error
+        let message = "An error occurred while chegking for existing user verification record";
+    res.redirect(`/user/verified/error=true&message=${message}`)
+      }
+
+    })
+    .catch((err) => console.log(err));
+    let message = "An error occurred while chegking for existing user verification record";
+    res.redirect(`/user/verified/error=true&message=${message}`)
+});
+
+userRouter.get("/verified", (req, res)=>{
+  res.sendFile(path.join(_dirname, "../templates/verified.html"))
+})
 
 // RECEIVE EMAIL USER
 userRouter.post("/forgot-password", async (req, res) => {
@@ -230,6 +269,7 @@ userRouter.get("/teachers", async (req, res) => {
   }
 });
 
+//LOGIN
 userRouter.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -282,7 +322,7 @@ userRouter.get(
   }
 );
 
-// UPDATE update setting, PUT???
+// UPDATE setting, PUT???
 userRouter.post("/update", isAuth, attachCurrentUser, async (req, res) => {
   try {
     const loggedInUser = req.currentUser;

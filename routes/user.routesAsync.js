@@ -46,9 +46,9 @@ userRouter.post("/signup", async (req, res) => {
       // pra criar novos admin, criar uma rota custom que so um admin pode criar pra criar outros admin
     });
 
-    sendVerificationEmail(createdUser, res);
-
     delete createdUser._doc.passwordHash;
+
+    await sendVerificationEmail(createdUser, res);
 
     return res.status(201).json(createdUser);
   } catch (err) {
@@ -79,14 +79,16 @@ const sendVerificationEmail = async ({ _id, email }, res) => {
       from: `<${process.env.EMAIL_ADDRESS}>`,
       to: email,
       subject: "Verify your email",
-      html: `<p>Verify your email adress to complete the signup and login into your account.</p><p>This link expires in 6 hours.</b></p><p>Press <a href=${
+      text: `Verify your email adress to complete the signup and login into your account. This link expires in 6 hours. Press ${
         currentUrl + "user/verify/" + _id + "/" + uniqueString
-      }>here</a> to proceed.</p>`,
+      } here to proceed.`,
+      html: `<p>Verify your email adress to complete the signup and login into your account.</p><p>This link expires in 6 hours.</b></p>
+      <p>Press <a href="${
+        currentUrl + `user/verify/` + _id + `/` + uniqueString
+      }">here</a> to proceed.</p>`,
     });
-    res.json({
-      status: "PENDING",
-      message: "Verification email sent",
-    });
+
+    return res.status(201).json({ msg: "Verification email sent" });
   } catch (err) {
     console.log(err);
     res.status(500).json({ msg: "Verification email failed." });
@@ -102,8 +104,7 @@ userRouter.get("/verify/:userId/:uniqueString", async (req, res) => {
     });
     if (verificationModel) {
       // user verification record exist -> we proceed
-      const { expiresAt, uniqueString: hashedUniqueString } =
-        verificationModel[0];
+      const { expiresAt, uniqueString: hashedUniqueString } = verificationModel;
 
       //checking for expired unique string
       if (expiresAt < Date.now()) {

@@ -1,6 +1,6 @@
 import express from "express";
 import { UserModel } from "../model/user.model.js";
-import { UserVerificationModel } from "../model/userVerification.js";
+import { UserVerificationModel } from "../model/userVerification.model.js"; // ->?
 import bcrypt from "bcrypt";
 import * as dotenv from "dotenv";
 import { generateToken } from "../config/jwt.config.js";
@@ -11,37 +11,32 @@ import isTeacher from "../middlewares/isTeacher.js";
 import jwt from "jsonwebtoken";
 import transporter from "../config/transporter.config.js";
 import { v4 as uuidv4 } from "uuid";
-import * as path from "path"
+import * as path from "path";
 
 dotenv.config();
 
 const userRouter = express.Router();
 
-// CREATE
+// salt bcrypt
+
+// CREATE USER
 userRouter.post("/signup", async (req, res) => {
   try {
     const { password } = req.body;
     // pass inserida tem que ter carateser etc
     if (
       !password ||
-      !password.match(
-        /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$/gm
+      !/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$/gm.test(
+        password // -> correct?
       )
     ) {
       return res.status(400).json({
         msg: "Your password must include minimum eight characters, at least one uppercase letter, one lowercase letter, one number and one special character.",
       });
     }
-    // CRYPTO PASSWORD E GUARDO NO DB UMA HASHEDPASSWORD
 
-    // salt bcrypt
     const salt = await bcrypt.genSalt(Number(process.env.SALT_ROUNDS));
-
-    // cryptografia bcrypt
     const hashedPassword = await bcrypt.hash(password, salt);
-
-    // console.log(`SALT = ${salt}`);
-    // console.log(`HASHED PASSWORD = ${hashedPassword}`);
 
     const createdUser = await UserModel.create({
       ...req.body,
@@ -49,11 +44,9 @@ userRouter.post("/signup", async (req, res) => {
       verified: false,
       // role: "USER" -> NO X TRACHER!!!
       // pra criar novos admin, criar uma rota custom que so um admin pode criar pra criar outros admin
-    }).then((result) => {
-      sendVerificationEmail(result, res);
-
-      console.log(`Result is: ${result}. Res is: ${res}`);
     });
+
+    sendVerificationEmail(createdUser, res);
 
     delete createdUser._doc.passwordHash;
 
@@ -64,106 +57,93 @@ userRouter.post("/signup", async (req, res) => {
   }
 });
 
-// send verification email
+// SEND EMAIL VERIFICATION
+const sendVerificationEmail = async ({ _id, email }, res) => {
+  try {
+    const currentUrl = Number(process.env.PORT);
 
-const sendVerificationEmail = ({ _id, email }, res) => {
-  const currentUrl = Number(process.env.PORT);
+    const uniqueString = uuidv4() + _id;
 
-  const uniqueString = uuidv4() + _id;
+    // hash uniqueString
+    const salt = await bcrypt.genSalt(Number(process.env.SALT_ROUNDS));
+    const hashedUniqueString = await bcrypt.hash(uniqueString, salt);
 
-  const mailOptions = {
-    from: `<${process.env.EMAIL_ADDRESS}>`,
-    to: email,
-    subject: "Verify your email",
-    html: `<p>Verify your email adress to complete the signup and login into your account.</p><p>This link expires in 6 hours.</b></p><p>Press <a href=${
-      currentUrl + "user/verify/" + _id + "/" + uniqueString
-    }>here</a> to proceed.</p>`,
-  };
-
-  // hash the uniqueString
-  // const salt = await bcrypt.genSalt(Number(process.env.SALT_ROUNDS));
-
-  // const hashedUniqueString = await bcrypt.hash(uniqueString, salt);
-
-  const saltRounds = 10;
-  bcrypt
-    .hash(uniqueString, saltRounds)
-    .then((hashedUniqueString) => {
-      const newVerification = UserVerification({
-        userId: _id,
-        uniqueString: hashedUniqueString,
-        createdAt: Date.now(),
-        expiresAt: Date.now() + 21600000,
-      });
-
-      newVerification
-        .save()
-        .then(() => {
-          transporter
-            .sendMail(mailOptions)
-            .then(() => {
-              res.json({
-                status: "PENDING",
-                message: "Verification email sent",
-              });
-            })
-            .catch(error);
-          res.json({
-            status: "FAILED",
-            message: "Verification email failed.",
-          });
-        })
-        .catch((error) => {
-          console.log(error);
-          res.json({
-            status: "FAILED",
-            message: "Couldn't save verification email data.",
-          });
-        });
-    })
-    .catch((error) => {
-      console.log(error);
-      res.json({
-        status: "FAILED",
-        message: "An error occurred while hashing email data.",
-      });
+    const newUserVerification = await UserVerificationModel.create({
+      userId: _id,
+      uniqueString: hashedUniqueString,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 21600000,
     });
+
+    const sendEmail = await transporter.sendMail({
+      from: `<${process.env.EMAIL_ADDRESS}>`,
+      to: email,
+      subject: "Verify your email",
+      html: `<p>Verify your email adress to complete the signup and login into your account.</p><p>This link expires in 6 hours.</b></p><p>Press <a href=${
+        currentUrl + "user/verify/" + _id + "/" + uniqueString
+      }>here</a> to proceed.</p>`,
+    });
+    res.json({
+      status: "PENDING",
+      message: "Verification email sent",
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ msg: "Verification email failed." });
+  }
 };
 
-// verify email
-userRouter.get("/verify/:userId/:uniqueString", (req, res) => {
-  let { userId, uniqueString } = req.params;
-  UserVerification.find({ userId })
-    .then((result)=>{
-      if (result.length > 0){
-        // user verification record exist -> we proceed
-        const {expiresAt} = result[0];
+// VERIFY EMAIL
+userRouter.get("/verify/:userId/:uniqueString", async (req, res) => {
+  try {
+    let { userId, uniqueString } = req.params;
+    let verificationModel = await UserVerificationModel.findOne({
+      userId: userId,
+    });
+    if (verificationModel) {
+      // user verification record exist -> we proceed
+      const { expiresAt, uniqueString: hashedUniqueString } =
+        verificationModel[0];
 
-        //checking for expired unique string
-        if (expiresAt < Date.now()){
-          // record has expired so we delete it
-          UserVerification.deleteOne({userId}).then().catch((error)=>{
-            console.log(error)
-            let message = "An error occurred while clearing user verification record";
-    res.redirect(`/user/verified/error=true&message=${message}`)
-          })
-        
-        }
+      //checking for expired unique string
+      if (expiresAt < Date.now()) {
+        // record has expired so we delete it
+        await UserVerificationModel.deleteOne({ userId: userId });
+        await UserModel.deleteOne({ _id: userId }); // delete the uses and have to sign up again?
+        let message = "Link has expired. Please sign up again";
+        res.redirect(`/user/verified/error=true&message=${message}`);
       } else {
-        // user verification record does not exist -> error
-        let message = "An error occurred while chegking for existing user verification record";
-    res.redirect(`/user/verified/error=true&message=${message}`)
-      }
+        let uniqueStringMatch = await bcrypt.compare(
+          uniqueString,
+          hashedUniqueString
+        );
 
-    })
-    .catch((err) => console.log(err));
-    let message = "An error occurred while chegking for existing user verification record";
-    res.redirect(`/user/verified/error=true&message=${message}`)
+        if (uniqueStringMatch) {
+          await UserModel.updateOne({ _id: userId }, { verified: true });
+          await UserVerificationModel.deleteOne({ userId: userId });
+          res.sendFile(path.join(__dirname, "./../templates/verified.html"));
+        } else {
+          let message =
+            "Invalid verification details passed. Check your inbox.";
+          res.redirect(`/user/verified/error=true&message=${message}`);
+        }
+      }
+    } else {
+      let message =
+        "An error occurred while checking for existing user verification record";
+      res.redirect(`/user/verified/error=true&message=${message}`);
+    }
+  } catch (err) {
+    console.log(err);
+    let message =
+      "An error occurred while checking for existing user verification record";
+    res.redirect(`/user/verified/error=true&message=${message}`);
+  }
 });
 
-userRouter.get("/verified", (req, res)=>{
-  res.sendFile(path.join(_dirname, "../templates/verified.html"))
-})
+userRouter.get("/verified", (req, res) => {
+  res.sendFile(path.join(__dirname, "../templates/verified.html"));
+});
 
 // RECEIVE EMAIL USER
 userRouter.post("/forgot-password", async (req, res) => {
@@ -282,6 +262,10 @@ userRouter.post("/login", async (req, res) => {
     // metodo bcrypt pra comparar booleano da senha inserita com senha do usuario
     if (!(await bcrypt.compare(password, user.passwordHash))) {
       return res.status(404).json({ msg: "Invalid password or email." });
+    }
+
+    if (!user.verified) {
+      return res.status(404).json({ msg: "Email has not been verified yet." });
     }
 
     // se não cair no if, geramos TOKEN -> func x gerar o TOKE definnida no config

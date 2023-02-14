@@ -50,6 +50,7 @@ userRouter.post("/signup", async (req, res) => {
 
     await sendVerificationEmail(createdUser, res);
 
+    // Error in the createdUser (ERR_HTTP_HEADERS_SENT)
     return res.status(201).json(createdUser);
   } catch (err) {
     console.log(err);
@@ -60,8 +61,9 @@ userRouter.post("/signup", async (req, res) => {
 // SEND EMAIL VERIFICATION
 const sendVerificationEmail = async ({ _id, email }, res) => {
   try {
-    const currentUrl = Number(process.env.PORT);
-
+    //  Integrate http://localhost:... 2.08 2. video
+    // OLDER: const currentUrl = Number(process.env.PORT);
+    const currentUrl = `http://localhost:${Number(process.env.PORT)}`;
     const uniqueString = uuidv4() + _id;
 
     // hash uniqueString
@@ -76,7 +78,9 @@ const sendVerificationEmail = async ({ _id, email }, res) => {
     });
 
     const sendEmail = await transporter.sendMail({
-      from: `<${process.env.EMAIL_ADDRESS}>`,
+      // integrate email value
+      // OLDER: from: `<${process.env.EMAIL_ADDRESS}>`,
+      from: process.env.ETHE_USER,
       to: email,
       subject: "Verify your email",
       text: `Verify your email adress to complete the signup and login into your account. This link expires in 6 hours. Press ${

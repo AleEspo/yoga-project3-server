@@ -84,11 +84,11 @@ const sendVerificationEmail = async ({ _id, email }, res) => {
       to: email,
       subject: "Verify your email",
       text: `Verify your email adress to complete the signup and login into your account. This link expires in 6 hours. Press ${
-        currentUrl + "user/verify/" + _id + "/" + uniqueString
+        currentUrl + "/verify/" + _id + "/" + uniqueString
       } here to proceed.`,
       html: `<p>Verify your email adress to complete the signup and login into your account.</p><p>This link expires in 6 hours.</b></p>
       <p>Press <a href="${
-        currentUrl + `user/verify/` + _id + `/` + uniqueString
+        currentUrl + `/verify/` + _id + `/` + uniqueString
       }">here</a> to proceed.</p>`,
     });
 
@@ -104,11 +104,14 @@ userRouter.get("/verify/:userId/:uniqueString", async (req, res) => {
   try {
     let { userId, uniqueString } = req.params;
     let verificationModel = await UserVerificationModel.findOne({
-      userId: userId,
+      userId: userId
     });
     if (verificationModel) {
       // user verification record exist -> we proceed
       const { expiresAt, uniqueString: hashedUniqueString } = verificationModel;
+      console.log(exporesAt);
+      console.log(uniqueString);
+      console.log(hashedUniqueString);
 
       //checking for expired unique string
       if (expiresAt < Date.now()) {
@@ -116,7 +119,8 @@ userRouter.get("/verify/:userId/:uniqueString", async (req, res) => {
         await UserVerificationModel.deleteOne({ userId: userId });
         await UserModel.deleteOne({ _id: userId }); // delete the uses and have to sign up again?
         let message = "Link has expired. Please sign up again";
-        res.redirect(`/user/verified/error=true&message=${message}`);
+        res.redirect(`/verified/error=true&message=${message}`);
+        // TODO: Missing clearing user
       } else {
         let uniqueStringMatch = await bcrypt.compare(
           uniqueString,
@@ -130,24 +134,24 @@ userRouter.get("/verify/:userId/:uniqueString", async (req, res) => {
         } else {
           let message =
             "Invalid verification details passed. Check your inbox.";
-          res.redirect(`/user/verified/error=true&message=${message}`);
+          res.redirect(`/verified/error=true&message=${message}`);
         }
       }
     } else {
       let message =
-        "An error occurred while checking for existing user verification record";
-      res.redirect(`/user/verified/error=true&message=${message}`);
+        "Account record doesn't exist or has been verified already. Please sign up or log in";
+      res.redirect(`/verified/error=true&message=${message}`);
     }
   } catch (err) {
     console.log(err);
     let message =
       "An error occurred while checking for existing user verification record";
-    res.redirect(`/user/verified/error=true&message=${message}`);
+    res.redirect(`/verified/error=true&message=${message}`);
   }
 });
 
 userRouter.get("/verified", (req, res) => {
-  res.sendFile(path.join(__dirname, "../templates/verified.html"));
+  res.sendFile(path.join(__dirname, "./../templates/verified.html"));
 });
 
 // RECEIVE EMAIL USER

@@ -1,7 +1,7 @@
 import express from "express";
 import * as dotenv from "dotenv";
 import { dbConnection } from "./config/db.config.js";
-import { userRouter } from "./routes/user.routesAsync.js";
+import { userRouter } from "./routes/user.routes.js";
 import { practiceRouter } from "./routes/practice.routes.js";
 import cors from "cors";
 import { orderRouter } from "./routes/order.routes.js";

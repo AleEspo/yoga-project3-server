@@ -95,7 +95,7 @@ const sendVerificationEmail = async ({ _id, email }, res) => {
     return res.status(201).json({ msg: "Verification email sent" });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ msg: "Verification email failed." });
+    return res.status(500).json({ msg: "Verification email failed." });
   }
 };
 
@@ -117,7 +117,7 @@ userRouter.get("/verify/:userId/:uniqueString", async (req, res) => {
         await UserVerificationModel.deleteOne({ userId: userId });
         await UserModel.deleteOne({ _id: userId }); // delete the uses and have to sign up again?
         let message = "Link has expired. Please sign up again";
-        res.redirect(`/verified/error=true&message=${message}`);
+        return res.redirect(`/user/verified/error=true&message=${message}`);
         // TODO: Missing clearing user
       } else {
         let uniqueStringMatch = await bcrypt.compare(
@@ -128,26 +128,34 @@ userRouter.get("/verify/:userId/:uniqueString", async (req, res) => {
         if (uniqueStringMatch) {
           await UserModel.updateOne({ _id: userId }, { verified: true });
           await UserVerificationModel.deleteOne({ userId: userId });
-          let message =
-            "You have been successfully verified. Log in to enjoy Yoga Home.";
-          res.redirect(`/verified/message=${message}`);
+          // return res.status(200).json({
+          //   msg: "You have been successfully verified.",
+          // });
+          // let message =
+          //   "You have been successfully verified. Log in to enjoy Yoga Home.";
+          // res.redirect(`http://localhost:4000/email-verification/message=${message}`);
           // res.sendFile(path.join(__dirname, "./../templates/verified.html"));
+          // Solution from GPT
+          return res.status(200).json({
+            message: 'You have been successfully verified. Log in to enjoy Yoga Home.',
+            redirect: '/email-verification',
+          });
         } else {
           let message =
             "Invalid verification details passed. Check your inbox.";
-          res.redirect(`/verified/error=true&message=${message}`);
+          return res.redirect(`/user/verified/error=true&message=${message}`);
         }
       }
     } else {
       let message =
         "Account record doesn't exist or has been verified already. Please sign up or log in";
-      res.redirect(`/verified/error=true&message=${message}`);
+      return res.redirect(`/user/verified/error=true&message=${message}`);
     }
   } catch (err) {
     console.log(err);
     let message =
       "An error occurred while checking for existing user verification record";
-    res.redirect(`/verified/error=true&message=${message}`);
+    return res.redirect(`/user/verified/error=true&message=${message}`);
   }
 });
 
@@ -233,7 +241,7 @@ userRouter.post("/reset-password", async (req, res) => {
       {
         ...req.body,
         passwordHash: newHashedPassword,
-        // role: "USER" -> NO X TRACHER!!!
+        // role: "USER" -> NO X TEACHER!!!
         // pra criar novos admin, criar uma rota custom que so um admin pode criar pra criar outros admin
       }
     );

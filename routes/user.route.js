@@ -51,7 +51,7 @@ userRouter.post("/signup", async (req, res) => {
     await sendVerificationEmail(createdUser, res);
 
     // Error in the createdUser (ERR_HTTP_HEADERS_SENT)
-    return res.status(201).json(createdUser);
+    // return res.status(201).json(createdUser);
   } catch (err) {
     console.log(err);
     return res.status(500).json(err);
@@ -92,7 +92,10 @@ const sendVerificationEmail = async ({ _id, email }, res) => {
       }">here</a> to proceed.</p>`,
     });
 
-    return res.status(201).json({ msg: "Verification email sent" });
+    return res.status(202).json({
+      msg: "Verification email sent",
+      redirect: "/email-verification"
+    });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ msg: "Verification email failed." });
@@ -117,7 +120,7 @@ userRouter.get("/verify/:userId/:uniqueString", async (req, res) => {
         await UserVerificationModel.deleteOne({ userId: userId });
         await UserModel.deleteOne({ _id: userId }); // delete the uses and have to sign up again?
         let message = "Link has expired. Please sign up again";
-        return res.redirect(`/user/verified/error=true&message=${message}`);
+        return res.redirect(`/verified/error=true&message=${message}`);
         // TODO: Missing clearing user
       } else {
         let uniqueStringMatch = await bcrypt.compare(

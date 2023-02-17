@@ -92,10 +92,7 @@ const sendVerificationEmail = async ({ _id, email }, res) => {
       }">here</a> to proceed.</p>`,
     });
 
-    return res.status(202).json({
-      msg: "Verification email sent",
-      redirect: "/email-verification"
-    });
+    return res.status(202).json({ msg: "Verification email sent." });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ msg: "Verification email failed." });
@@ -104,7 +101,6 @@ const sendVerificationEmail = async ({ _id, email }, res) => {
 
 // VERIFY EMAIL
 userRouter.get("/verify/:userId/:uniqueString", async (req, res) => {
-
   try {
     let { userId, uniqueString } = req.params;
     let verificationModel = await UserVerificationModel.findOne({
@@ -120,7 +116,7 @@ userRouter.get("/verify/:userId/:uniqueString", async (req, res) => {
         await UserVerificationModel.deleteOne({ userId: userId });
         await UserModel.deleteOne({ _id: userId }); // delete the uses and have to sign up again?
         let message = "Link has expired. Please sign up again";
-        return res.redirect(`/verified/error=true&message=${message}`);
+        return res.redirect(`/email-verification/error=true&message=${message}`);
         // TODO: Missing clearing user
       } else {
         let uniqueStringMatch = await bcrypt.compare(
@@ -139,26 +135,28 @@ userRouter.get("/verify/:userId/:uniqueString", async (req, res) => {
           // res.redirect(`http://localhost:4000/email-verification/message=${message}`);
           // res.sendFile(path.join(__dirname, "./../templates/verified.html"));
           // Solution from GPT
-          return res.status(200).json({
-            message: 'You have been successfully verified. Log in to enjoy Yoga Home.',
-            redirect: '/email-verification',
-          });
+          // return res.status(200).json({
+          //   message: 'You have been successfully verified. Log in to enjoy Yoga Home.',
+          //   redirect: '/email-verification',
+          // });
+          let message = 'You have been successfully verified. Log in to enjoy Yoga Home.'
+          return res.redirect(`/email-verification/error=false&message=${message}`);
         } else {
           let message =
             "Invalid verification details passed. Check your inbox.";
-          return res.redirect(`/user/verified/error=true&message=${message}`);
+          return res.redirect(`/email-verification/error=true&message=${message}`);
         }
       }
     } else {
       let message =
         "Account record doesn't exist or has been verified already. Please sign up or log in";
-      return res.redirect(`/user/verified/error=true&message=${message}`);
+      return res.redirect(`/email-verification/error=true&message=${message}`);
     }
   } catch (err) {
     console.log(err);
     let message =
       "An error occurred while checking for existing user verification record";
-    return res.redirect(`/user/verified/error=true&message=${message}`);
+    return res.redirect(`/email-verification/error=true&message=${message}`);
   }
 });
 

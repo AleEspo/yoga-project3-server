@@ -135,12 +135,12 @@ userRouter.get("/verify/:userId/:uniqueString", async (req, res) => {
           // res.redirect(`http://localhost:4000/email-verification/message=${message}`);
           // res.sendFile(path.join(__dirname, "./../templates/verified.html"));
           // Solution from GPT
-          // return res.status(200).json({
-          //   message: 'You have been successfully verified. Log in to enjoy Yoga Home.',
-          //   redirect: '/email-verification',
-          // });
-          let message = 'You have been successfully verified. Log in to enjoy Yoga Home.'
-          return res.redirect(`/email-verification/error=false&message=${message}`);
+          return res.status(200).json({
+            message: 'You have been successfully verified. Log in to enjoy Yoga Home.',
+            redirect: '/email-verification',
+          });
+          // let message = 'You have been successfully verified. Log in to enjoy Yoga Home.'
+          // return res.redirect(`/email-verification/error=false&message=${message}`);
         } else {
           let message =
             "Invalid verification details passed. Check your inbox.";
@@ -160,9 +160,9 @@ userRouter.get("/verify/:userId/:uniqueString", async (req, res) => {
   }
 });
 
-userRouter.get("/verified", (req, res) => {
-  res.sendFile(path.join(__dirname, "./../templates/verified.html"));
-});
+// userRouter.get("/verified", (req, res) => {
+//   res.sendFile(path.join(__dirname, "./../templates/verified.html"));
+// });
 
 // RECEIVE EMAIL USER
 userRouter.post("/forgot-password", async (req, res) => {

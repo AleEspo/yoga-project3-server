@@ -80,7 +80,7 @@ const sendVerificationEmail = async ({ _id, email }, res) => {
     const sendEmail = await transporter.sendMail({
       // integrate email value
       // OLDER: from: `<${process.env.EMAIL_ADDRESS}>`,
-      from: process.env.ETHE_USER,
+      from: process.env.EMAIL_ADDRESS_GOOGLE_APP,
       to: email,
       subject: "Verify your email",
       text: `Verify your email adress to complete the signup and login into your account. This link expires in 6 hours. Press ${

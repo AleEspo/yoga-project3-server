@@ -268,7 +268,7 @@ userRouter.get("/teachers", async (req, res) => {
   }
 });
 
-//LOGIN
+//LOGIN -> add unverified user barrier
 userRouter.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;

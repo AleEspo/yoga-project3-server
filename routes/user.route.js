@@ -137,7 +137,7 @@ userRouter.get("/verify/:userId/:uniqueString", async (req, res) => {
           // Solution from GPT
           return res.status(200).json({
             message: 'You have been successfully verified. Log in to enjoy Yoga Home.',
-            redirect: '/email-verification',
+            // redirect: '/email-verification',
           });
           // let message = 'You have been successfully verified. Log in to enjoy Yoga Home.'
           // return res.redirect(`/email-verification/error=false&message=${message}`);

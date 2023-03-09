@@ -80,15 +80,15 @@ const sendVerificationEmail = async ({ _id, email }, res) => {
     const sendEmail = await transporter.sendMail({
       // integrate email value
       // OLDER: from: `<${process.env.EMAIL_ADDRESS}>`,
-      from: process.env.EMAIL_ADDRESS_GOOGLE_APP,
-      to: email,
+      from: `<${process.env.EMAIL_ADDRESS_GOOGLE_AP}>`,
+      to: `<${email}>`,
       subject: "Verify your email",
       text: `Verify your email adress to complete the signup and login into your account. This link expires in 6 hours. Press ${
-        currentUrl + "/user/verify/" + _id + "/" + uniqueString
+        currentUrl + "/user/email-verification/" + _id + "/" + uniqueString
       } here to proceed.`,
       html: `<p>Verify your email adress to complete the signup and login into your account.</p><p>This link expires in 6 hours.</b></p>
       <p>Press <a href="${
-        currentUrl + `/user/verify/` + _id + `/` + uniqueString
+        currentUrl + `/user/email-verification/` + _id + `/` + uniqueString
       }">here</a> to proceed.</p>`,
     });
 
@@ -100,65 +100,77 @@ const sendVerificationEmail = async ({ _id, email }, res) => {
 };
 
 // VERIFY EMAIL
-userRouter.get("/verify/:userId/:uniqueString", async (req, res) => {
-  try {
-    let { userId, uniqueString } = req.params;
-    let verificationModel = await UserVerificationModel.findOne({
-      userId: userId
-    });
-    if (verificationModel) {
-      // user verification record exist -> we proceed
-      const { expiresAt, uniqueString: hashedUniqueString } = verificationModel;
+userRouter.get(
+  "/email-verification/:userId/:uniqueString",
+  async (req, res) => {
+    try {
+      let { userId, uniqueString } = req.params;
+      let verificationModel = await UserVerificationModel.findOne({
+        userId: userId,
+      });
+      if (verificationModel) {
+        // user verification record exist -> we proceed
+        const { expiresAt, uniqueString: hashedUniqueString } =
+          verificationModel;
 
-      //checking for expired unique string
-      if (expiresAt < Date.now()) {
-        // record has expired so we delete it
-        await UserVerificationModel.deleteOne({ userId: userId });
-        await UserModel.deleteOne({ _id: userId }); // delete the uses and have to sign up again?
-        let message = "Link has expired. Please sign up again";
-        return res.redirect(`/email-verification/error=true&message=${message}`);
-        // TODO: Missing clearing user
-      } else {
-        let uniqueStringMatch = await bcrypt.compare(
-          uniqueString,
-          hashedUniqueString
-        );
-
-        if (uniqueStringMatch) {
-          await UserModel.updateOne({ _id: userId }, { verified: true });
+        //checking for expired unique string
+        if (expiresAt < Date.now()) {
+          // record has expired so we delete it
           await UserVerificationModel.deleteOne({ userId: userId });
-          // return res.status(200).json({
-          //   msg: "You have been successfully verified.",
-          // });
-          // let message =
-          //   "You have been successfully verified. Log in to enjoy Yoga Home.";
-          // res.redirect(`http://localhost:4000/email-verification/message=${message}`);
-          // res.sendFile(path.join(__dirname, "./../templates/verified.html"));
-          // Solution from GPT
-          return res.status(200).json({
-            message: 'You have been successfully verified. Log in to enjoy Yoga Home.',
-            // redirect: '/email-verification',
-          });
-          // let message = 'You have been successfully verified. Log in to enjoy Yoga Home.'
-          // return res.redirect(`/email-verification/error=false&message=${message}`);
+          await UserModel.deleteOne({ _id: userId }); // delete the uses and have to sign up again?
+
+          let msg = "Link has expired. Please sign up again";
+          return res.status(400).json({ msg });
+          // .redirect(
+          //   `/user/email-verification/error=true&message=${message}`
+          // );
+          // TODO: Missing clearing user
         } else {
-          let message =
-            "Invalid verification details passed. Check your inbox.";
-          return res.redirect(`/email-verification/error=true&message=${message}`);
+          let uniqueStringMatch = await bcrypt.compare(
+            uniqueString,
+            hashedUniqueString
+          );
+
+          if (uniqueStringMatch) {
+            await UserModel.updateOne({ _id: userId }, { verified: true });
+            await UserVerificationModel.deleteOne({ userId: userId });
+            // return res.status(200).json({
+            //   msg: "You have been successfully verified.",
+            // });
+            // let message =
+            //   "You have been successfully verified. Log in to enjoy Yoga Home.";
+            // res.redirect(`http://localhost:4000/email-verification/message=${message}`);
+            // res.sendFile(path.join(__dirname, "./../templates/verified.html"));
+            // Solution from GPT
+            return res.status(200).json({
+              msg: "You have been successfully verified. Log in to enjoy Yoga Home.",
+              // redirect: '/email-verification',
+            });
+            // let message = 'You have been successfully verified. Log in to enjoy Yoga Home.'
+            // return res.redirect(`/email-verification/error=false&message=${message}`);
+          } else {
+            let msg = "Invalid verification details passed. Check your inbox.";
+            return res.status(400).json({ msg });
+            // .redirect(
+            //   `/user/email-verification/error=true&message=${message}`
+            // );
+          }
         }
+      } else {
+        let msg =
+          "Account record doesn't exist or has been verified already. Please sign up or log in";
+        return res.status(400).json({ msg });
+        // .redirect(`/user/email-verification/error=true&message=${message}`);
       }
-    } else {
-      let message =
-        "Account record doesn't exist or has been verified already. Please sign up or log in";
-      return res.redirect(`/email-verification/error=true&message=${message}`);
+    } catch (err) {
+      console.log(err);
+      let msg =
+        "An error occurred while checking for existing user verification record";
+      return res.status(500).json({ msg });
+      // .redirect(`/user/email-verification/error=true&message=${message}`);
     }
-  } catch (err) {
-    console.log(err);
-    let message =
-      "An error occurred while checking for existing user verification record";
-    return res.redirect(`/email-verification/error=true&message=${message}`);
   }
-});
+);
 
 // userRouter.get("/verified", (req, res) => {
 //   res.sendFile(path.join(__dirname, "./../templates/verified.html"));

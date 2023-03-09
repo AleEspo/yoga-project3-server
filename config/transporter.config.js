@@ -6,14 +6,14 @@ const transporter = nodemailer.createTransport({
   // port: 587,
   // secure: false,
   // auth: {
-    //   user: process.env.ETHE_USER,
-    //   pass: process.env.ETHE_PASS,
-    // }
+  //   user: process.env.ETHE_USER,
+  //   pass: process.env.ETHE_PASS,
+  // }
   service: "gmail",
   host: "smtp.gmail.com",
   secure: false,
   auth: {
-    user: process.env.EMAIL_ADDRESS_HOTMAIL,
+    user: process.env.EMAIL_ADDRESS_GOOGLE,
     pass: process.env.APP_PASSWORD,
   },
 });

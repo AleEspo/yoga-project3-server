@@ -12,6 +12,7 @@ import jwt from "jsonwebtoken";
 import transporter from "../config/transporter.config.js";
 import { v4 as uuidv4 } from "uuid";
 import * as path from "path";
+import {axiosInstanceUrl} from "../api/api.js";
 
 dotenv.config();
 
@@ -63,7 +64,13 @@ const sendVerificationEmail = async ({ _id, email }, res) => {
   try {
     //  Integrate http://localhost:... 2.08 2. video
     // OLDER: const currentUrl = Number(process.env.PORT);
-    const currentUrl = `http://localhost:${Number(process.env.PORT)}`;
+    // const apiURLs = {
+    //   development: "http://localhost:4000",
+    //   production: "https://yogahome.cyclic.app",
+    // }; ?
+    // const api = axios.create({ baseURL: apiURLs[process.env.NODE_ENV] });
+
+    const currentUrl = axiosInstanceUrl.defaults.baseURL ;
     const uniqueString = uuidv4() + _id;
 
     // hash uniqueString

@@ -70,7 +70,7 @@ const sendVerificationEmail = async ({ _id, email }, res) => {
     // }; ?
     // const api = axios.create({ baseURL: apiURLs[process.env.NODE_ENV] });
 
-    const currentUrl = axiosInstanceUrl.defaults.baseURL ;
+    const currentUrl = "https://yogahome.cyclic.app" ;
     const uniqueString = uuidv4() + _id;
 
     // hash uniqueString

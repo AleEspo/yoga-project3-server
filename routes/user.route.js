@@ -71,7 +71,6 @@ const sendVerificationEmail = async ({ _id, email }, res) => {
     // const api = axios.create({ baseURL: apiURLs[process.env.NODE_ENV] });
 
     const currentUrl = axiosInstanceUrl.defaults.baseURL ;
-    console.log(currentUrl)
     const uniqueString = uuidv4() + _id;
 
     // hash uniqueString
@@ -86,8 +85,6 @@ const sendVerificationEmail = async ({ _id, email }, res) => {
     });
 
     const sendEmail = await transporter.sendMail({
-      // integrate email value
-      // OLDER: from: `<${process.env.EMAIL_ADDRESS}>`,
       from: `<${process.env.EMAIL_ADDRESS_GOOGLE}>`,
       to: `<${email}>`,
       subject: "Verify your email",

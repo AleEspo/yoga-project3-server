@@ -17,4 +17,7 @@ const axiosInstanceUrl = axios.create({
 
 // const axiosInstanceUrl = axios.create({ baseURL: apiURLs[process.env.NODE_ENV] });
 
+// const axiosInstanceUrl = axios.create({ baseURL: apiURLs[process.env.NODE_ENV] });
+
+
 export { axiosInstanceUrl };

@@ -128,7 +128,7 @@ practiceRouter.delete(
           _id: req.params.practiceId,
         });
 
-        return res.status(200).json(deletePractice);
+        return res.status(200).json({msn:`Cancelled practice: ${deletePractice}; Cancelled orders: ${cancelledOrders}`});
       }
       return res
         .status(400)

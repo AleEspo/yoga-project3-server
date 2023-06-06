@@ -11,6 +11,7 @@ const practiceSchema = new Schema({
     date: {type: Date, required: true},
     time: {type: String, required: true},
     tag: [{type: String, enum: ["Hatha", "Vinyasa", "Yin", "Power", "Roket", "Meditation", "Vipassana"]}],
+    level: [{type: String, enum: ["Beginner", "Intermediate", "Advanced"]}],
     createdAt: {type: Date, default: new Date(Date.now())},
     teacher: {type: Types.ObjectId, ref: "User"},
     students: [{type: Types.ObjectId, ref: "User"}],
